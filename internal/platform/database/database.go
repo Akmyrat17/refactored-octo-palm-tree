@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/boilerplate/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/boilerplate/internal/config"
 )
 
 func New(ctx context.Context, cfg config.DatabaseConfig) (*pgxpool.Pool, error) {

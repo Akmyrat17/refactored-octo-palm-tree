@@ -3,9 +3,9 @@ package dao
 import (
 	"time"
 
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/shared/enums"
 	"github.com/google/uuid"
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/shared/enums"
 )
 
 type UserDAO struct {

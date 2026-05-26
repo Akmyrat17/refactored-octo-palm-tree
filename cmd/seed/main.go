@@ -4,10 +4,10 @@ import (
 	"context"
 	"log"
 
-	"github.com/yourorg/boilerplate/internal/config"
-	"github.com/yourorg/boilerplate/internal/modules/permission/infra/persistence"
-	"github.com/yourorg/boilerplate/internal/platform/database"
-	"github.com/yourorg/boilerplate/pkg/logger"
+	"github.com/boilerplate/internal/config"
+	"github.com/boilerplate/internal/modules/permission/infra/persistence"
+	"github.com/boilerplate/internal/platform/database"
+	"github.com/boilerplate/pkg/logger"
 )
 
 func main() {

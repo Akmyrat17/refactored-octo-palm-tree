@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/yourorg/boilerplate/internal/config"
-	"github.com/yourorg/boilerplate/internal/platform/database"
-	"github.com/yourorg/boilerplate/internal/server"
-	"github.com/yourorg/boilerplate/pkg/logger"
+	"github.com/boilerplate/internal/config"
+	"github.com/boilerplate/internal/platform/database"
+	"github.com/boilerplate/internal/server"
+	"github.com/boilerplate/pkg/logger"
 )
 
 func main() {

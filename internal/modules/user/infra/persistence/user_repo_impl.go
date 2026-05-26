@@ -6,15 +6,42 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/modules/user/infra/persistence/dao"
+	"github.com/boilerplate/internal/shared/app_errors"
+	"github.com/boilerplate/pkg/query"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/modules/user/infra/persistence/dao"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
+
+var userAllowedFields = map[string]string{
+	"id":         "id",
+	"name":       "name",
+	"email":      "email",
+	"phone":      "phone",
+	"role":       "role",
+	"status":     "status",
+	"created_at": "created_at",
+	"updated_at": "updated_at",
+}
+
+var userColumns = []string{
+	"id", "name", "email", "phone", "role", "password_hash", "token_version", "status", "created_at", "updated_at",
+}
+
+func scanUser(row pgx.Row) (*dao.UserDAO, error) {
+	var user dao.UserDAO
+	err := row.Scan(
+		&user.ID, &user.Name, &user.Email, &user.Phone, &user.Role, &user.PasswordHash, &user.TokenVersion, &user.Status, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
 
 type UserRepoImpl struct {
 	db *pgxpool.Pool
@@ -42,17 +69,15 @@ func (r *UserRepoImpl) Save(ctx context.Context, user *domain.User) error {
 }
 
 func (r *UserRepoImpl) FindByID(ctx context.Context, id domain.UserID) (*domain.User, error) {
-	query, args, err := psql.Select(
-		"id", "name", "email", "phone", "role", "password_hash", "token_version", "status", "created_at", "updated_at",
-	).From("users").Where(sq.Eq{"id": uuid.UUID(id)}).ToSql()
+	query, args, err := psql.Select(userColumns...).
+		From("users").
+		Where(sq.Eq{"id": uuid.UUID(id)}).
+		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
 
-	var d dao.UserDAO
-	err = r.db.QueryRow(ctx, query, args...).Scan(
-		&d.ID, &d.Name, &d.Email, &d.Phone, &d.Role, &d.PasswordHash, &d.TokenVersion, &d.Status, &d.CreatedAt, &d.UpdatedAt,
-	)
+	userDAO, err := scanUser(r.db.QueryRow(ctx, query, args...))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, app_errors.NotFound("user")
@@ -60,46 +85,61 @@ func (r *UserRepoImpl) FindByID(ctx context.Context, id domain.UserID) (*domain.
 		return nil, app_errors.DatabaseFailure(err)
 	}
 
-	return d.ToDomain(), nil
+	return userDAO.ToDomain(), nil
 }
 
-func (r *UserRepoImpl) FindAll(ctx context.Context, limit, offset int) ([]*domain.User, int64, error) {
-	query, args, err := psql.Select(
-		"id", "name", "email", "phone", "role", "password_hash", "token_version", "status", "created_at", "updated_at",
-	).From("users").Limit(uint64(limit)).Offset(uint64(offset)).ToSql()
+func (r *UserRepoImpl) FindAll(ctx context.Context, limit, offset int, filters []query.Filter, sorts []query.SortField) ([]*domain.User, int64, error) {
+	// Count
+	countBuilder := psql.Select("COUNT(*)").From("users")
+	countBuilder, err := query.ApplyFilters(countBuilder, filters, userAllowedFields)
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to build query: %w", err)
+		return nil, 0, app_errors.DatabaseFailure(err)
 	}
 
-	rows, err := r.db.Query(ctx, query, args...)
+	countQuery, countArgs, err := countBuilder.ToSql()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var total int64
+	if err := r.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total); err != nil {
+		return nil, 0, app_errors.DatabaseFailure(err)
+	}
+
+	// Fetch
+	queryBuilder := psql.Select(userColumns...).From("users")
+	queryBuilder, err = query.ApplyFilters(queryBuilder, filters, userAllowedFields)
+	if err != nil {
+		return nil, 0, app_errors.DatabaseFailure(err)
+	}
+	if len(sorts) > 0 {
+		queryBuilder = query.ApplySort(queryBuilder, sorts, userAllowedFields)
+	} else {
+		queryBuilder = queryBuilder.OrderBy("created_at DESC")
+	}
+
+	dbQuery, args, err := queryBuilder.Limit(uint64(limit)).Offset(uint64(offset)).ToSql()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	rows, err := r.db.Query(ctx, dbQuery, args...)
 	if err != nil {
 		return nil, 0, app_errors.DatabaseFailure(err)
 	}
 	defer rows.Close()
 
 	var users []*domain.User
+
 	for rows.Next() {
-		var d dao.UserDAO
-		err = rows.Scan(&d.ID, &d.Name, &d.Email, &d.Phone, &d.Role, &d.PasswordHash, &d.TokenVersion, &d.Status, &d.CreatedAt, &d.UpdatedAt)
+		userDAO, err := scanUser(rows)
 		if err != nil {
-			return nil, 0, app_errors.DatabaseFailure(err)
+			return nil, 0, err
 		}
-		users = append(users, d.ToDomain())
+		users = append(users, userDAO.ToDomain())
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, 0, app_errors.DatabaseFailure(err)
-	}
-
-	// Get total count
-	countQuery, countArgs, err := psql.Select("COUNT(*)").From("users").ToSql()
-	if err != nil {
-		return nil, 0, fmt.Errorf("failed to build count query: %w", err)
-	}
-
-	var total int64
-	err = r.db.QueryRow(ctx, countQuery, countArgs...).Scan(&total)
-	if err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, 0, app_errors.DatabaseFailure(err)
 	}
 
@@ -122,10 +162,15 @@ func (r *UserRepoImpl) Update(ctx context.Context, user *domain.User) error {
 		return fmt.Errorf("failed to build query: %w", err)
 	}
 
-	_, err = r.db.Exec(ctx, query, args...)
+	result, err := r.db.Exec(ctx, query, args...)
 	if err != nil {
 		return app_errors.DatabaseFailure(err)
 	}
+
+	if result.RowsAffected() == 0 {
+		return app_errors.NotFound("user")
+	}
+
 	return nil
 }
 
@@ -143,17 +188,15 @@ func (r *UserRepoImpl) Delete(ctx context.Context, id domain.UserID) error {
 }
 
 func (r *UserRepoImpl) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
-	query, args, err := psql.Select(
-		"id", "name", "email", "phone", "role", "password_hash", "token_version", "status", "created_at", "updated_at",
-	).From("users").Where(sq.Eq{"email": email}).ToSql()
+	query, args, err := psql.Select(userColumns...).
+		From("users").
+		Where(sq.Eq{"email": email}).
+		ToSql()
 	if err != nil {
 		return nil, fmt.Errorf("failed to build query: %w", err)
 	}
 
-	var d dao.UserDAO
-	err = r.db.QueryRow(ctx, query, args...).Scan(
-		&d.ID, &d.Name, &d.Email, &d.Phone, &d.Role, &d.PasswordHash, &d.TokenVersion, &d.Status, &d.CreatedAt, &d.UpdatedAt,
-	)
+	userDAO, err := scanUser(r.db.QueryRow(ctx, query, args...))
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, app_errors.NotFound("user")
@@ -161,5 +204,5 @@ func (r *UserRepoImpl) FindByEmail(ctx context.Context, email string) (*domain.U
 		return nil, app_errors.DatabaseFailure(err)
 	}
 
-	return d.ToDomain(), nil
+	return userDAO.ToDomain(), nil
 }

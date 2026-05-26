@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/modules/permission/infra/persistence"
+	"github.com/boilerplate/internal/shared/app_errors"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/modules/permission/infra/persistence"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
 )
 
 func SeedGroupPermissions(ctx context.Context, db *pgxpool.Pool, permissionNames map[string]int, data *SeedData) (map[string]int, error) {

@@ -1,13 +1,14 @@
 package http
 
 import (
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/modules/user/application"
+	"github.com/boilerplate/internal/modules/user/infra/http/dto"
+	"github.com/boilerplate/internal/shared/app_errors"
+	"github.com/boilerplate/internal/shared/response"
+	"github.com/boilerplate/pkg/query"
+	reqctx "github.com/boilerplate/pkg/req_ctx"
 	"github.com/labstack/echo/v4"
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/modules/user/application"
-	"github.com/yourorg/boilerplate/internal/modules/user/infra/http/dto"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
-	"github.com/yourorg/boilerplate/internal/shared/response"
-	"github.com/yourorg/boilerplate/pkg/req_ctx"
 )
 
 type UserHandler struct {
@@ -19,8 +20,10 @@ func NewUserHandler(service *application.UserService) *UserHandler {
 }
 
 func (h *UserHandler) ListUsers(c echo.Context) error {
-	p := req_ctx.ParsePagination(c)
-	users, total, err := h.service.FindAll(c.Request().Context(), p.PerPage, p.Offset())
+	p := reqctx.ParsePagination(c)
+	filters := query.ParseFilters(c.QueryParams())
+	sorts := query.ParseSort(c.QueryParam("sort"))
+	users, total, err := h.service.FindAll(c.Request().Context(), p.PerPage, p.Offset(), filters, sorts)
 	if err != nil {
 		return err
 	}
@@ -29,7 +32,7 @@ func (h *UserHandler) ListUsers(c echo.Context) error {
 
 func (h *UserHandler) CreateUser(c echo.Context) error {
 	var req dto.CreateUserReq
-	if err := req_ctx.BindAndValidate(c, &req); err != nil {
+	if err := reqctx.BindAndValidate(c, &req); err != nil {
 		return err
 	}
 	user := domain.NewUser(req.Name, req.Email, req.Phone)
@@ -63,7 +66,7 @@ func (h *UserHandler) UpdateUser(c echo.Context) error {
 	}
 
 	var req dto.UpdateUserReq
-	if err := req_ctx.BindAndValidate(c, &req); err != nil {
+	if err := reqctx.BindAndValidate(c, &req); err != nil {
 		return err
 	}
 

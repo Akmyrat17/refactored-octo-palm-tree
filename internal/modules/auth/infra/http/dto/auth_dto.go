@@ -1,9 +1,9 @@
 package dto
 
 import (
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/modules/auth/application"
-	userDto "github.com/yourorg/boilerplate/internal/modules/user/infra/http/dto"
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/modules/auth/application"
+	userDto "github.com/boilerplate/internal/modules/user/infra/http/dto"
 )
 
 type LoginReq struct {

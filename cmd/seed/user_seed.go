@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/boilerplate/internal/shared/enums"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/yourorg/boilerplate/internal/shared/enums"
 	"golang.org/x/crypto/bcrypt"
 )
 

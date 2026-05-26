@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/modules/permission/infra/persistence/dao"
+	"github.com/boilerplate/internal/shared/app_errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/lib/pq"
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/internal/modules/permission/infra/persistence/dao"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
 )
 
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)

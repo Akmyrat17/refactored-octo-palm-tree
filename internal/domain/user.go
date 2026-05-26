@@ -3,8 +3,9 @@ package domain
 import (
 	"time"
 
+	"github.com/boilerplate/internal/shared/app_errors"
+	"github.com/boilerplate/internal/shared/enums"
 	"github.com/google/uuid"
-	"github.com/yourorg/boilerplate/internal/shared/enums"
 )
 
 type UserID uuid.UUID
@@ -48,7 +49,7 @@ func (u UserID) String() string { return uuid.UUID(u).String() }
 func ParseUserID(s string) (UserID, error) {
 	id, err := uuid.Parse(s)
 	if err != nil {
-		return UserID{}, err
+		return UserID{}, app_errors.ValidationError("invalid user ID format")
 	}
 	return UserID(id), nil
 }

@@ -3,8 +3,8 @@ package cache
 import (
 	"fmt"
 
+	"github.com/boilerplate/internal/config"
 	"github.com/redis/go-redis/v9"
-	"github.com/yourorg/boilerplate/internal/config"
 )
 
 func New(cfg config.RedisConfig) (*redis.Client, error) {

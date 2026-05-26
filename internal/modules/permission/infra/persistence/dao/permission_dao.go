@@ -3,7 +3,7 @@ package dao
 import (
 	"time"
 
-	"github.com/yourorg/boilerplate/internal/domain"
+	"github.com/boilerplate/internal/domain"
 )
 
 type PermissionDAO struct {

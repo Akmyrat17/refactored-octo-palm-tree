@@ -1,13 +1,13 @@
 package http
 
 import (
+	"github.com/boilerplate/internal/modules/auth/application"
+	"github.com/boilerplate/internal/modules/auth/infra/http/dto"
+	"github.com/boilerplate/internal/shared/app_errors"
+	sharedmiddleware "github.com/boilerplate/internal/shared/middleware"
+	"github.com/boilerplate/internal/shared/response"
+	req_ctx "github.com/boilerplate/pkg/req_ctx"
 	"github.com/labstack/echo/v4"
-	"github.com/yourorg/boilerplate/internal/modules/auth/application"
-	"github.com/yourorg/boilerplate/internal/modules/auth/infra/http/dto"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
-	sharedmiddleware "github.com/yourorg/boilerplate/internal/shared/middleware"
-	"github.com/yourorg/boilerplate/internal/shared/response"
-	"github.com/yourorg/boilerplate/pkg/req_ctx"
 )
 
 type AuthHandler struct {

@@ -3,8 +3,8 @@ package application
 import (
 	"context"
 
-	"github.com/yourorg/boilerplate/internal/domain"
-	"github.com/yourorg/boilerplate/pkg/logger"
+	"github.com/boilerplate/internal/domain"
+	"github.com/boilerplate/pkg/logger"
 )
 
 type PermissionRepository interface {

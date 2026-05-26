@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/yourorg/boilerplate/internal/shared/enums"
+	"github.com/boilerplate/internal/shared/enums"
 )
 
 var errorCodeMap = map[string]int{

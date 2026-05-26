@@ -1,11 +1,11 @@
-package req_ctx
+package reqctx
 
 import (
 	"fmt"
 
+	"github.com/boilerplate/internal/shared/app_errors"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
 )
 
 type PaginationReq struct {

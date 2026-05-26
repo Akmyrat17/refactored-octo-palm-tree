@@ -8,11 +8,11 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/yourorg/boilerplate/internal/config"
-	"github.com/yourorg/boilerplate/internal/domain"
-	userapp "github.com/yourorg/boilerplate/internal/modules/user/application"
-	"github.com/yourorg/boilerplate/internal/shared/app_errors"
-	"github.com/yourorg/boilerplate/pkg/logger"
+	"github.com/boilerplate/internal/config"
+	"github.com/boilerplate/internal/domain"
+	userapp "github.com/boilerplate/internal/modules/user/application"
+	"github.com/boilerplate/internal/shared/app_errors"
+	"github.com/boilerplate/pkg/logger"
 )
 
 // TokenPair represents the access and refresh token pair returned to the client
@@ -78,7 +78,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*Token
 		return nil, nil, app_errors.InternalError("failed to generate tokens").WithCause(err)
 	}
 
-	s.logger.DBInfo(ctx, "user login", "user_id", user.ID)
+	s.logger.DBInfo(ctx, "user login", "user_id", user.ID.String())
 	return pair, user, nil
 }
 
@@ -111,7 +111,7 @@ func (s *AuthService) Logout(ctx context.Context, userID domain.UserID) error {
 		return app_errors.InternalError("failed to logout").WithCause(err)
 	}
 
-	s.logger.DBInfo(ctx, "user logout", "user_id", user.ID)
+	s.logger.DBInfo(ctx, "user logout", "user_id", user.ID.String())
 	return nil
 }
 

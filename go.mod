@@ -1,4 +1,4 @@
-module github.com/yourorg/boilerplate
+module github.com/boilerplate
 
 go 1.22
 
